@@ -159,9 +159,39 @@
 
         const DUNGEONS = [{ name: "Forest", waves: 3, mobType: "Walker", speed: 1800, exp: 20, icon: "🧟" }, { name: "Outpost", waves: 5, mobType: "Stalker", speed: 1100, exp: 50, icon: "🧛" }];
 
-        let player = { lvl: 1, exp: 0, gold: 500, stats: { vit: 0 }, hp: 100, maxHp: 100, inventory: [{ id: "stone", uses: 15 }, { id: "stone", uses: 15 }], storage: [], equip: { weapon: "slingshot", helmet: null, armor: null, pants: null, boots: null } };
-        let battle = { active: false, queue: [], enemy: null, attackTimer: null, sessionLoot: [], sessionXP: 0 };
+let player = { 
+    lvl: 1, exp: 0, gold: 500, stats: { vit: 0 }, hp: 100, maxHp: 100, 
+    maxWeight: 20, maxStorage: 50, // เพิ่มค่า Max Weight ตรงนี้
+    inventory: [{ id: "stone", uses: 15 }, { id: "stone", uses: 15 }], 
+    storage: [], 
+    equip: { weapon: "slingshot", helmet: null, armor: null, pants: null, boots: null } 
+};
 
+                function load() { 
+            try { 
+        let d = localStorage.getItem('zombie_v19_final_x'); 
+        if(d) { 
+            let p = JSON.parse(d); 
+            if(p && Array.isArray(p.inventory)) {
+                player = p;
+                // ถ้าเซฟเก่าไม่มีค่า maxWeight ให้เติมค่าเข้าไป
+                if(!player.maxWeight) player.maxWeight = 20;
+                if(!player.maxStorage) player.maxStorage = 50;
+            }
+        } 
+    } catch(e) {} 
+}
+                function upgradeStorage() {
+            let cost = 1000; // ราคาอัปเกรด 1000
+            if(player.gold >= cost) {
+        player.gold -= cost;
+        player.maxStorage += 10; // เพิ่มน้ำหนักคลังทีละ 10
+        alert(curLang==='th' ? "อัปเกรดคลังสำเร็จ! (+10kg)" : "Storage Upgraded! (+10kg)");
+        updateUI();
+    } else {
+        alert(curLang==='th' ? "เงินไม่พอ (1000$)" : "Need 1000$");
+    }
+}
         function getIconHtml(id, size = "30px") {
             const db = ITEMS[id]; if(!db) return "❓";
             if(db.icon.includes('/')) return `<img src="${db.icon}" class="item-icon-img" style="width:${size}; height:${size};" onerror="this.outerHTML='📦'">`;
@@ -199,19 +229,21 @@
             changeScreen(activeScreen);
         }
 
-        function updateHUD() {
-            let nextXP = player.lvl * 100;
-            while(player.exp >= nextXP) { player.exp -= nextXP; player.lvl++; player.stats.vit++; player.hp += 50; nextXP = player.lvl * 100; }
-            let gearBonus = 0; for (let s in player.equip) { if (player.equip[s]) gearBonus += ITEMS[player.equip[s]]?.hpBonus || 0; }
-            player.maxHp = 100 + (player.stats.vit * 10) + gearBonus;
-            if(player.hp > player.maxHp) player.hp = player.maxHp;
-            document.getElementById('bar-hp').style.width = (player.hp / player.maxHp * 100) + "%";
-            document.getElementById('bar-xp').style.width = (player.exp / nextXP * 100) + "%";
-            document.getElementById('hud-gold').innerText = Math.floor(player.gold);
-            document.getElementById('hud-lvl').innerText = player.lvl;
-            document.getElementById('hud-weight').innerText = getWeight(player.inventory);
-            save();
-        }
+                function updateHUD() {
+                    let nextXP = player.lvl * 100;
+                    while(player.exp >= nextXP) { player.exp -= nextXP; player.lvl++;  player.stats.vit++; player.hp += 50; nextXP = player.lvl * 100; }
+    let gearBonus = 0; for (let s in player.equip) { if (player.equip[s]) gearBonus += ITEMS[player.equip[s]]?.hpBonus || 0; }
+    player.maxHp = 100 + (player.stats.vit * 10) + gearBonus;
+    if(player.hp > player.maxHp) player.hp = player.maxHp;
+    document.getElementById('bar-hp').style.width = (player.hp / player.maxHp * 100) + "%";
+    document.getElementById('bar-xp').style.width = (player.exp / nextXP * 100) + "%";
+    document.getElementById('hud-gold').innerText = Math.floor(player.gold);
+    document.getElementById('hud-lvl').innerText = player.lvl;
+    
+        document.getElementById('hud-weight').innerText = getWeight(player.inventory) + "/" + player.maxWeight;
+    
+    save();
+}
 
         function getWeight(list) { return list.reduce((t, i) => t + (ITEMS[i.id]?.weight || 0), 0).toFixed(1); }
 
@@ -319,18 +351,20 @@
             });
         }
         function renderStorage() {
-            let l = document.getElementById('storage-list'); if(!l) return; l.innerHTML = "";
-            player.storage.forEach((item, i) => l.innerHTML += `<div class="item-card" onclick="showItemDetail(${i}, 'stock')">${getIconHtml(item.id)}${curLang==='en'?ITEMS[item.id].name:ITEMS[item.id].name_th}</div>`);
-        }
-        function renderChar() {
-            document.getElementById('val-maxhp').innerText = player.maxHp;
-            const slots = ['weapon', 'helmet', 'armor', 'pants', 'boots'];
-            const icons = {weapon:'🗡️', helmet:'🪖', armor:'👕', pants:'👖', boots:'👞'};
-            slots.forEach(s => {
-                let id = player.equip[s]; let el = document.getElementById('slot-' + s);
-                if(id) { el.classList.add('active'); el.innerHTML = getIconHtml(id, "45px") + `<span class="slot-name">${s}</span>`; }
-                else { el.classList.remove('active'); el.innerHTML = `<b>${icons[s]}</b><span class="slot-name">${s}</span>`; }
-            });
+    let l = document.getElementById('storage-list'); if(!l) return; l.innerHTML = "";
+    
+       let wInfo = `<div style="text-align:center; margin-bottom:10px; font-size:11px; color:#888;">
+        STOCK: <span style="color:#fff">${getWeight(player.storage)} / ${player.maxStorage} KG</span> 
+        <button class="btn btn-orange" style="width:auto; padding:2px 6px; font-size:9px; margin-left:5px;" onclick="upgradeStorage()">UP (+10kg) $1000</button>
+    </div>`;
+    
+       let controls = `<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;"><button class="btn btn-green" onclick="exportItem()" id="lang-export">${LANG[curLang].export}</button><button class="btn btn-blue" onclick="importToStock()" id="lang-import-btn">${LANG[curLang].import}</button></div>`;
+    
+      let listHTML = "";
+    player.storage.forEach((item, i) => listHTML += `<div class="item-card" onclick="showItemDetail(${i}, 'stock')">${getIconHtml(item.id)}${curLang==='en'?ITEMS[item.id].name:ITEMS[item.id].name_th}</div>`);
+    
+    l.parentElement.innerHTML = `<h3 id="lang-stock-title">${LANG[curLang].stock_t}</h3>${wInfo}${controls}<div id="storage-list" class="item-grid">${listHTML}</div><button class="btn btn-red" style="margin-top:15px;" onclick="changeScreen('home')">${LANG[curLang].btn_close}</button>`;
+}
         }
         function showItemDetail(index, loc) {
             const it = (loc === 'bag') ? player.inventory[index] : player.storage[index]; if(!it) return;
@@ -352,15 +386,85 @@
             else if(['weapon','helmet','armor','pants','boots'].includes(db.type)) { let old = player.equip[db.type]; player.equip[db.type] = it.id; player.inventory.splice(idx, 1); if(old) player.inventory.push({id:old}); }
             updateUI();
         }
-        function moveItem(i, f, t) { let it = player[f].splice(i, 1)[0]; if(parseFloat(getWeight(player[t])) + (ITEMS[it.id]?.weight || 0) > 50 && t === 'inventory') { player[f].push(it); alert(LANG[curLang].msg_full); } else { player[t].push(it); } updateUI(); }
+        function moveItem(i, f, t) { 
+    let it = player[f][i]; 
+    let w = ITEMS[it.id]?.weight || 0;
+    let targetLimit = (t === 'inventory') ? player.maxWeight : player.maxStorage; // เช็ค Limit แยก
+    
+    if(parseFloat(getWeight(player[t])) + w > targetLimit) { 
+        alert(LANG[curLang].msg_full + ` (Max: ${targetLimit}kg)`); 
+    } else { 
+        player[t].push(player[f].splice(i, 1)[0]); 
+    } 
+    updateUI(); 
+}
         function renderShop() { let b = document.getElementById('shop-items-buy'); b.innerHTML = ""; ["stone", "ammo_9mm", "ammo_556", "medkit", "helmet_1", "armor_1", "pants_1", "boots_1", "pistol"].forEach(id => { let db = ITEMS[id]; b.innerHTML += `<div class="craft-row" style="position:relative;"><div class="price-tag">$${db.price}</div><div>${getIconHtml(id)} ${curLang==='en'?db.name:db.name_th}</div><button class="btn btn-green" style="width:60px" onclick="buyItem('${id}')">${LANG[curLang].btn_buy}</button></div>`; }); }
-        function buyItem(id) { if(player.gold >= ITEMS[id].price && (parseFloat(getWeight(player.inventory)) + ITEMS[id].weight <= 50)) { player.gold -= ITEMS[id].price; player.inventory.push({ id: id, uses: ITEMS[id].maxUses || undefined }); updateUI(); } }
+        function buyItem(id) { 
+    if(player.gold >= ITEMS[id].price) {
+        // เช็คกับ player.maxWeight (20kg)
+        if (parseFloat(getWeight(player.inventory)) + ITEMS[id].weight <= player.maxWeight) { 
+            player.gold -= ITEMS[id].price; 
+            player.inventory.push({ id: id, uses: ITEMS[id].maxUses || undefined }); 
+            updateUI(); 
+        } else {
+            alert(LANG[curLang].msg_full);
+        }
+    } 
+}
         function sellItem(i) { player.gold += Math.floor(ITEMS[player.inventory[i].id].price * 0.5); player.inventory.splice(i, 1); updateUI(); }
         function renderCraft() { let l = document.getElementById('craft-list'); l.innerHTML = ""; RECIPES.forEach(r => { let db = ITEMS[r.id]; let reqs = Object.entries(r.req).map(([id, q]) => `${curLang==='th'?ITEMS[id].name_th:ITEMS[id].name} x${q}`).join(", "); l.innerHTML += `<div class="craft-row"><div>${getIconHtml(r.id)} <b>${curLang==='en'?db.name:db.name_th}</b><br><small style="color:#888;">${LANG[curLang].req}: ${reqs}</small></div><button class="btn btn-green" style="width:70px" onclick="craft('${r.id}')">CRAFT</button></div>`; }); }
-        function craft(id) { let r = RECIPES.find(x => x.id === id); for(let [mId, q] of Object.entries(r.req)) { if(player.inventory.filter(it => it.id === mId).length < q) { alert(LANG[curLang].msg_mats); return; } } Object.entries(r.req).forEach(([mId, q]) => { for(let i=0; i<q; i++) { let idx = player.inventory.findIndex(it => it.id === mId); if(idx !== -1) player.inventory.splice(idx, 1); } }); player.inventory.push({ id: id, uses: ITEMS[id].maxUses || undefined }); updateUI(); }
+        function craft(id) { 
+    let r = RECIPES.find(x => x.id === id); 
+    for(let [mId, q] of Object.entries(r.req)) { if(player.inventory.filter(it => it.id === mId).length < q) { alert(LANG[curLang].msg_mats); return; } } 
+    
+        if (parseFloat(getWeight(player.inventory)) + ITEMS[id].weight > player.maxWeight + 5) {          alert(LANG[curLang].msg_full); return;
+    }
+
+    Object.entries(r.req).forEach(([mId, q]) => { for(let i=0; i<q; i++) { let idx = player.inventory.findIndex(it => it.id === mId); if(idx !== -1) player.inventory.splice(idx, 1); } }); 
+    player.inventory.push({ id: id, uses: ITEMS[id].maxUses || undefined }); 
+    updateUI(); 
+}
         function renderMap() { let l = document.getElementById('dungeon-list'); l.innerHTML = ""; DUNGEONS.forEach((d, i) => l.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;"><span><b>${d.name}</b><br><small>Waves: ${d.waves}</small></span><button class="btn btn-red" style="width:80px" onclick="startDungeon(${i})">GO</button></div>`); }
-        function unequip(s) { if(player.equip[s]) { let id = player.equip[s]; if(parseFloat(getWeight(player.inventory)) + ITEMS[id].weight <= 50) { player.inventory.push({id: id}); player.equip[s] = null; updateUI(); } } }
-        function rest() { player.hp = player.hp; save(); alert(LANG[curLang].msg_saved); updateUI(); }
+        function unequip(s) { 
+    if(player.equip[s]) { 
+        let id = player.equip[s]; 
+        if(parseFloat(getWeight(player.inventory)) + ITEMS[id].weight <= player.maxWeight) { 
+            player.inventory.push({id: id}); 
+            player.equip[s] = null; 
+            updateUI(); 
+        } else {
+            alert(LANG[curLang].msg_full);
+        }
+    } 
+}
+function checkLootAccumulate() {
+    if(Math.random() < 0.4) {
+        const lts = ["scrap", "gunpowder", "medkit"];
+        const dId = lts[Math.floor(Math.random()*3)];
+        // เช็คกับ player.maxWeight
+        if(parseFloat(getWeight(player.inventory))+ITEMS[dId].weight <= player.maxWeight) {
+            player.inventory.push({id: dId, uses: ITEMS[dId].maxUses || undefined});
+            battle.sessionLoot.push(dId);
+        }
+    }
+}
+function importToStock() { 
+    let code = prompt("PASTE CODE:"); 
+    try { 
+        let item = JSON.parse(atob(code)); 
+        if(item.id) { 
+            // เพิ่มเช็คน้ำหนักคลังก่อนรับของ
+            let w = ITEMS[item.id]?.weight || 0;
+            if(parseFloat(getWeight(player.storage)) + w <= player.maxStorage) {
+                player.storage.push(item); 
+                alert(LANG[curLang].msg_received); 
+                updateUI(); 
+            } else {
+                alert("Storage Full!");
+            }
+        } 
+    } catch(e) { alert(LANG[curLang].msg_error); } 
+}
         function fleeBattle() { clearInterval(battle.attackTimer); battle.active = false; changeScreen('home'); }
         function exportItem() { let idx = prompt("Index (1,2...)")-1; if(player.storage[idx]) { let code = btoa(JSON.stringify(player.storage.splice(idx,1)[0])); prompt("CODE:", code); updateUI(); } }
         function importToStock() { let code = prompt("PASTE CODE:"); try { let item = JSON.parse(atob(code)); if(item.id) { player.storage.push(item); alert(LANG[curLang].msg_received); updateUI(); } } catch(e) { alert(LANG[curLang].msg_error); } }
