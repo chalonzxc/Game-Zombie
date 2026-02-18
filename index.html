@@ -439,12 +439,12 @@ let player = {
     } 
 }
 function checkLootAccumulate() {
-   function checkLootAccumulate() {
     if(Math.random() > 0.4) return; 
 
     let chance = Math.floor(Math.random() * 100);
     let dId = "";
 
+   
     if(chance < 50) { 
         dId = "scrap";       // 0-49 (โอกาส 50%) = ของหาง่าย
     } else if(chance < 80) {
@@ -455,11 +455,7 @@ function checkLootAccumulate() {
         dId = "medkit";      // 95-99 (โอกาส 5%)  = ของแรร์
     }
 
-        if(ITEMS[dId] && (parseFloat(getWeight(player.inventory)) + ITEMS[dId].weight <= player.maxWeight)) {
-        player.inventory.push({id: dId, uses: ITEMS[dId].maxUses || undefined});
-        battle.sessionLoot.push(dId);
-    }
-}
+  }
 function importToStock() { 
     let code = prompt("PASTE CODE:"); 
     try { 
