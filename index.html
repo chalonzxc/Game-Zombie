@@ -137,6 +137,7 @@
             "ammo_556": { name: "5.56 Mag", name_th: "กระสุน 5.56มม", type: "ammo", weight: 0.5, icon: "image/Ammo_556.png", price: 850, maxUses: 30, source: "src_craft", desc: "desc_ammo" },
             "scrap": { name: "Scrap", name_th: "เศษเหล็ก", type: "mat", weight: 1.0, icon: "image/Scrap.png", price: 40, source: "src_drop", desc: "desc_mat" },
             "gunpowder": { name: "Powder", name_th: "ดินปืน", type: "mat", weight: 0.5, icon: "image/GunPowder.png", price: 60, source: "src_drop", desc: "desc_mat" },
+                        "watch": { name: "Watch", name_th: "นาฬิกา", type: "mat", weight: 0.5, icon: "image/"Watch.png", price: 150, source: "src_drop", desc: "desc_mat" },
             "medkit": { name: "Medkit", name_th: "ยากล่อง", type: "use", effect: "hp", val: 50, weight: 1.0, icon: "image/Medkit.png", price: 300, source: "src_shop", desc: "desc_use" },
             "slingshot": { name: "Slingshot", name_th: "หนังสติ๊ก", type: "weapon", atk: 7, ammoType: "stone", weight: 1.0, icon: "image/Slingshot.png", price: 100, source: "src_start", desc: "desc_gear" },
             "pistol": { name: "Pistol", name_th: "ปืนพก", type: "weapon", atk: 15, ammoType: "ammo_9mm", weight: 2.0, icon: "image/Pistol.png", price: 3000, source: "src_shop", desc: "desc_gear" },
@@ -438,14 +439,25 @@ let player = {
     } 
 }
 function checkLootAccumulate() {
-    if(Math.random() < 0.4) {
-        const lts = ["scrap", "gunpowder", "medkit"];
-        const dId = lts[Math.floor(Math.random()*3)];
-        // เช็คกับ player.maxWeight
-        if(parseFloat(getWeight(player.inventory))+ITEMS[dId].weight <= player.maxWeight) {
-            player.inventory.push({id: dId, uses: ITEMS[dId].maxUses || undefined});
-            battle.sessionLoot.push(dId);
-        }
+   function checkLootAccumulate() {
+    if(Math.random() > 0.4) return; 
+
+    let chance = Math.floor(Math.random() * 100);
+    let dId = "";
+
+    if(chance < 50) { 
+        dId = "scrap";       // 0-49 (โอกาส 50%) = ของหาง่าย
+    } else if(chance < 80) {
+        dId = "gunpowder";   // 50-79 (โอกาส 30%) = ของปกติ
+    } else if(chance < 95) {
+        dId = "watch";    // 80-94 (โอกาส 15%) = ของหายาก
+    } else {
+        dId = "medkit";      // 95-99 (โอกาส 5%)  = ของแรร์
+    }
+
+        if(ITEMS[dId] && (parseFloat(getWeight(player.inventory)) + ITEMS[dId].weight <= player.maxWeight)) {
+        player.inventory.push({id: dId, uses: ITEMS[dId].maxUses || undefined});
+        battle.sessionLoot.push(dId);
     }
 }
 function importToStock() { 
