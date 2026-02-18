@@ -132,7 +132,7 @@
         let curLang = "en";
 
         const ITEMS = {
-            "stone": { name: "Stone Pack", name_th: "ก้อนหิน", type: "ammo", weight: 0.1, icon: "image/Stone.png", price: 50, maxUses: 15, source: "src_start", desc: "desc_ammo" },
+            "stone": { name: "Stone Pack", name_th: "ก้อนหิน", type: "ammo", weight: 0.5, icon: "image/Stone.png", price: 50, maxUses: 15, source: "src_start", desc: "desc_ammo" },
             "ammo_9mm": { name: "9mm Mag", name_th: "กระสุน 9มม", type: "ammo", weight: 0.5, icon: "image/Ammo_9mm.png", price: 350, maxUses: 12, source: "src_craft", desc: "desc_ammo" },
             "ammo_556": { name: "5.56 Mag", name_th: "กระสุน 5.56มม", type: "ammo", weight: 0.5, icon: "image/Ammo_556.png", price: 850, maxUses: 30, source: "src_craft", desc: "desc_ammo" },
             "scrap": { name: "Scrap", name_th: "เศษเหล็ก", type: "mat", weight: 1.0, icon: "image/Scrap.png", price: 40, source: "src_drop", desc: "desc_mat" },
@@ -353,7 +353,7 @@
             updateUI();
         }
         function moveItem(i, f, t) { let it = player[f].splice(i, 1)[0]; if(parseFloat(getWeight(player[t])) + (ITEMS[it.id]?.weight || 0) > 50 && t === 'inventory') { player[f].push(it); alert(LANG[curLang].msg_full); } else { player[t].push(it); } updateUI(); }
-        function renderShop() { let b = document.getElementById('shop-items-buy'); b.innerHTML = ""; ["ammo_9mm", "stone", "ammo_556", "medkit", "helmet_1", "armor_1", "pants_1", "boots_1", "pistol"].forEach(id => { let db = ITEMS[id]; b.innerHTML += `<div class="craft-row" style="position:relative;"><div class="price-tag">$${db.price}</div><div>${getIconHtml(id)} ${curLang==='en'?db.name:db.name_th}</div><button class="btn btn-green" style="width:60px" onclick="buyItem('${id}')">${LANG[curLang].btn_buy}</button></div>`; }); }
+        function renderShop() { let b = document.getElementById('shop-items-buy'); b.innerHTML = ""; ["stone", "ammo_9mm", "ammo_556", "medkit", "helmet_1", "armor_1", "pants_1", "boots_1", "pistol"].forEach(id => { let db = ITEMS[id]; b.innerHTML += `<div class="craft-row" style="position:relative;"><div class="price-tag">$${db.price}</div><div>${getIconHtml(id)} ${curLang==='en'?db.name:db.name_th}</div><button class="btn btn-green" style="width:60px" onclick="buyItem('${id}')">${LANG[curLang].btn_buy}</button></div>`; }); }
         function buyItem(id) { if(player.gold >= ITEMS[id].price && (parseFloat(getWeight(player.inventory)) + ITEMS[id].weight <= 50)) { player.gold -= ITEMS[id].price; player.inventory.push({ id: id, uses: ITEMS[id].maxUses || undefined }); updateUI(); } }
         function sellItem(i) { player.gold += Math.floor(ITEMS[player.inventory[i].id].price * 0.5); player.inventory.splice(i, 1); updateUI(); }
         function renderCraft() { let l = document.getElementById('craft-list'); l.innerHTML = ""; RECIPES.forEach(r => { let db = ITEMS[r.id]; let reqs = Object.entries(r.req).map(([id, q]) => `${curLang==='th'?ITEMS[id].name_th:ITEMS[id].name} x${q}`).join(", "); l.innerHTML += `<div class="craft-row"><div>${getIconHtml(r.id)} <b>${curLang==='en'?db.name:db.name_th}</b><br><small style="color:#888;">${LANG[curLang].req}: ${reqs}</small></div><button class="btn btn-green" style="width:70px" onclick="craft('${r.id}')">CRAFT</button></div>`; }); }
