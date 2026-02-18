@@ -137,6 +137,7 @@
             "ammo_556": { name: "5.56 Mag", name_th: "กระสุน 5.56มม", type: "ammo", weight: 0.5, icon: "image/Ammo_556.png", price: 850, maxUses: 30, source: "src_craft", desc: "desc_ammo" },
             "scrap": { name: "Scrap", name_th: "เศษเหล็ก", type: "mat", weight: 1.0, icon: "image/Scrap.png", price: 40, source: "src_drop", desc: "desc_mat" },
             "gunpowder": { name: "Powder", name_th: "ดินปืน", type: "mat", weight: 0.5, icon: "image/GunPowder.png", price: 60, source: "src_drop", desc: "desc_mat" },
+            "watch": { name: "Watch", name_th: "นาฬิกา", type: "mat", weight: 0.5, icon: "image/Watch.png", price: 150, source: "src_drop", desc: "desc_mat" },
             "medkit": { name: "Medkit", name_th: "ยากล่อง", type: "use", effect: "hp", val: 50, weight: 1.0, icon: "image/Medkit.png", price: 300, source: "src_shop", desc: "desc_use" },
             "slingshot": { name: "Slingshot", name_th: "หนังสติ๊ก", type: "weapon", atk: 7, ammoType: "stone", weight: 1.0, icon: "image/Slingshot.png", price: 100, source: "src_start", desc: "desc_gear" },
             "pistol": { name: "Pistol", name_th: "ปืนพก", type: "weapon", atk: 15, ammoType: "ammo_9mm", weight: 2.0, icon: "image/Pistol.png", price: 3000, source: "src_shop", desc: "desc_gear" },
@@ -320,7 +321,7 @@
         }
         function renderStorage() {
             let l = document.getElementById('storage-list'); if(!l) return; l.innerHTML = "";
-            player.storage.forEach((item, i) => l.innerHTML += `<div class="item-card" onclick="showItemDetail(${i}, 'stock')">${getIconHtml(item.id)}${curLang==='en'?ITEMS[item.id].name:ITEMS[item.id].name_th}</div>`);
+            player.storage.forEach((item, i) => l.innerHTML += `<div classqe="item-card" onclick="showItemDetail(${i}, 'stock')">${getIconHtml(item.id)}${curLang==='en'?ITEMS[item.id].name:ITEMS[item.id].name_th}</div>`);
         }
         function renderChar() {
             document.getElementById('val-maxhp').innerText = player.maxHp;
@@ -371,3 +372,4 @@
     </script>
 </body>
 </html>
+
